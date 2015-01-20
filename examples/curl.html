@@ -1,0 +1,142 @@
+<html>
+<body style="margin:0px;">
+
+<script src="../lib/three.js"></script>
+<script src="../lib/jquery.min.js"></script>
+<script src="../lib/underscore.js"></script>
+<script src="../lib/TrackballControls.js"></script>
+<script src="../lib/ShaderLoader.js"></script>
+
+<script src="../PhysicsRenderer.js"></script>
+
+
+<script>
+
+
+  var scene , camera , renderer, clock , controls;
+
+  var SIZE = 128;
+  var simulation;
+
+  var simulationUniforms = {
+  
+    dT:{ type:"f" , value: 0 },
+    noiseSize: { type:"f" , value: .1 }
+
+  }
+
+  var renderUniforms = {
+
+    t_pos:{ type:"t" , value: null }
+
+  }
+
+
+
+
+  var shaders = new ShaderLoader( '../shaders' );
+
+  shaders.load( 'ss-curl'    , 'sim'    , 'simulation' );
+  shaders.load( 'vs-lookup'  , 'lookup' , 'vertex'     );
+  shaders.load( 'fs-lookup'  , 'lookup' , 'fragment'   );
+
+  shaders.shaderSetLoaded = function(){
+
+    init();
+    animate();
+
+  }
+
+
+  
+  function init(){
+
+      /*
+
+         Default threejs stuff!
+
+      */
+      scene = new THREE.Scene();
+
+      var ar = window.innerWidth / window.innerHeight;
+
+      camera = new THREE.PerspectiveCamera( 75, ar , 1, 1000 );
+      camera.position.z = 100;
+
+      renderer = new THREE.WebGLRenderer();
+      renderer.setSize( window.innerWidth, window.innerHeight );
+
+      document.body.appendChild( renderer.domElement );
+
+
+      controls = new THREE.TrackballControls( camera );
+      clock = new THREE.Clock();
+
+
+      simulation = new PhysicsRenderer( SIZE , shaders.ss.sim , renderer );
+
+
+      var geo = createLookupGeometry( SIZE );
+
+      var mat = new THREE.ShaderMaterial({
+        uniforms: renderUniforms,
+        vertexShader: shaders.vs.lookup,
+        fragmentShader: shaders.fs.lookup,
+
+      });
+
+      simulation.setUniforms( simulationUniforms );
+
+      var particles = new THREE.PointCloud( geo , mat );
+
+      scene.add( particles );
+
+
+      simulation.addBoundTexture( renderUniforms.t_pos , 'output' );
+      simulation.resetRand( 5 );
+
+  }
+
+  function animate(){
+
+    requestAnimationFrame( animate );
+ 
+    simulationUniforms.dT.value = clock.getDelta();
+    simulation.update();
+
+    controls.update();
+    
+    renderer.render( scene , camera );
+
+  }
+
+
+  function createLookupGeometry( size ){        
+        
+    var geo = new THREE.BufferGeometry();
+
+   // geo.addAttribute( 'position', Float32Array , size * size , 3 );
+  
+    var positions = new Float32Array(  size * size * 3 );
+
+    for ( var i = 0, j = 0, l = positions.length / 3; i < l; i ++, j += 3 ) {
+
+      positions[ j     ] = ( i % size ) / size;
+      positions[ j + 1 ] = Math.floor( i / size ) / size;
+      //positions[ j + 2 ] = Math.sin( (i / size) * Math.PI );
+
+    }
+
+    var posA = new THREE.BufferAttribute( positions , 3 );
+    geo.addAttribute( 'position', posA );
+
+
+    return geo;
+    
+  }
+
+
+</script>
+
+</body>
+</html>
