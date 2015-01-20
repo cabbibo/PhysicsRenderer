@@ -47,7 +47,7 @@ void main(){
   }
 
   
-  vel += vec3( 0. , -20. , 0. );
+  vel += vec3( 0. , -.002 , 0. );
 
 
   for( int i = 0; i < colliders; i++ ){
@@ -56,19 +56,16 @@ void main(){
 
     if( length( dif ) < radius ){
 
-      vel -= normalize(dif) * 100.;
+      vel -= normalize(dif) * .1;
 
     }
-
- 
-
-    
 
   }
 
 
+  vel *= .99; // dampening
 
-  vec3 p = pos.xyz + vel * dT;
+  vec3 p = pos.xyz + vel;
 
   gl_FragColor = vec4( p , life );
 

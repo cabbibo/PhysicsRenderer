@@ -27,8 +27,7 @@ Because GPGPU Calculations are not something many developers are familiar with, 
 - [Collisions]
 - [Gravity]
 - [Flocking]
-- [Force Directed]
-- [Text]
+- [Springs]
 
 Also, at any point in time, jump straight over to the [Github] for the code! With all of this being said, lets start talking about how to use the Physics Renderer! If you want to know a bit more about how it actually works, check out the BACKGROUND section, but hopefully it is easy enough that you shouldn't *have* to know how crazy the gpgpu really gets!
 
@@ -133,7 +132,7 @@ vec3 vel = pos.xyz - oPos.xyz;
 ```
 
 #####Force
-This is the section of the program which can be all you! For now, I'll show you the most basic example: Gravity.
+This is the section of the program which can be all you! For now, I'll show you the most basic example: Fake Gravity.
 
 ```glsl
 vec3 force = vec3( 0. , -1. , 0. );
@@ -408,7 +407,7 @@ All this means though, is that we let the computer do colors, but use them for d
 [Collisions]:http://cabbi.bo/PhysicsRenderer/examples/collisions.html
 [Gravity]:http://cabbi.bo/PhysicsRenderer/examples/gravity.html
 [Flocking]:http://cabbi.bo/PhysicsRenderer/examples/flocking.html
-[Force Directed]:http://cabbi.bo/PhysicsRenderer/examples/forecDirected.html
+[Springs]:http://cabbi.bo/PhysicsRenderer/examples/springs.html
 [Text]:http://cabbi.bo/PhysicsRenderer/examples/text.html
 
 

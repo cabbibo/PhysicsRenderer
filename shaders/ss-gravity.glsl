@@ -1,20 +1,10 @@
 uniform sampler2D t_oPos;
 uniform sampler2D t_pos;
 
-uniform float dT;
-uniform float noiseSize;
 uniform vec2  resolution;
 
-varying vec2 vUv;
-
-$simplex
-$curl
-
-
-float rand(vec2 co){
-    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
-}
-
+uniform float dT;
+uniform vec3 centerPos;
 
 void main(){
 
@@ -24,10 +14,14 @@ void main(){
 
   vec3 vel = pos.xyz - oPos.xyz;
 
-  vec3 curl = curlNoise( pos.xyz * noiseSize );
+  vec3 force = vec3( 0. );
 
-  vel += curl * .01;
-  vel *= .97; // dampening
+  vec3 dif = pos.xyz - centerPos;
+
+  force -= length( dif ) * length( dif ) * normalize( dif ) * .01;
+
+
+  vel += force * dT;
 
   vec3 p = pos.xyz + vel;
 

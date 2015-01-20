@@ -1,0 +1,146 @@
+<html>
+<body style="margin:0px;">
+
+<script src="../lib/three.js"></script>
+<script src="../lib/jquery.min.js"></script>
+<script src="../lib/underscore.js"></script>
+<script src="../lib/TrackballControls.js"></script>
+<script src="../lib/ShaderLoader.js"></script>
+
+<script src="../PhysicsRenderer.js"></script>
+
+
+<script>
+
+
+  var scene , camera , renderer, clock , controls;
+
+  var SIZE = 32;
+  var simulation;
+
+  var simulationUniforms = {
+  
+    dT:{ type:"f" , value: 0 },
+    seperationDistance:   { type: "f" , value: 10.39 },
+    alignmentDistance:    { type: "f" , value: 20.6 },
+    cohesionDistance:     { type: "f" , value: 50.9 },
+    maxVel:               { type: "f" , value: 2 },
+    forceMultiplier:      { type: "f" , value: 1 },
+    centerPower:          { type: "f" , value: .06 },
+    predator:             { type: "v3", value: new THREE.Vector3() },
+    predatorRepelRadius:  { type: "f" , value: .01 },
+    predatorRepelPower:   { type: "f" , value: 2 },
+  }
+
+  var renderUniforms = {
+
+    t_pos:{ type:"t" , value: null }
+
+  }
+
+
+
+
+  var shaders = new ShaderLoader( '../shaders' );
+
+  shaders.load( 'ss-flocking', 'sim'    , 'simulation' );
+  shaders.load( 'vs-lookup'  , 'lookup' , 'vertex'     );
+  shaders.load( 'fs-lookup'  , 'lookup' , 'fragment'   );
+
+  shaders.shaderSetLoaded = function(){
+
+    init();
+    animate();
+
+  }
+
+
+  
+  function init(){
+
+      /*
+
+         Default threejs stuff!
+
+      */
+      scene = new THREE.Scene();
+
+      var ar = window.innerWidth / window.innerHeight;
+
+      camera = new THREE.PerspectiveCamera( 75, ar , 1, 10000 );
+      camera.position.z = 500;
+
+      renderer = new THREE.WebGLRenderer();
+      renderer.setSize( window.innerWidth, window.innerHeight );
+
+      document.body.appendChild( renderer.domElement );
+
+
+      controls = new THREE.TrackballControls( camera );
+      clock = new THREE.Clock();
+
+      var ss = shaders.setValue( shaders.ss.sim , 'SIZE' , SIZE );
+
+      simulation = new PhysicsRenderer( SIZE , ss , renderer );
+
+
+      var geo = createLookupGeometry( SIZE );
+
+      var mat = new THREE.ShaderMaterial({
+        uniforms: renderUniforms,
+        vertexShader: shaders.vs.lookup,
+        fragmentShader: shaders.fs.lookup,
+
+      });
+
+      simulation.setUniforms( simulationUniforms );
+
+      var particles = new THREE.PointCloud( geo , mat );
+
+      scene.add( particles );
+
+
+      simulation.addBoundTexture( renderUniforms.t_pos , 'output' );
+      simulation.resetRand( 300 );
+
+  }
+
+  function animate(){
+
+    requestAnimationFrame( animate );
+ 
+    simulationUniforms.dT.value = clock.getDelta();
+    simulation.update();
+
+    controls.update();
+    
+    renderer.render( scene , camera );
+
+  }
+
+
+  function createLookupGeometry( size ){        
+        
+    var geo = new THREE.BufferGeometry();
+    var positions = new Float32Array(  size * size * 3 );
+
+    for ( var i = 0, j = 0, l = positions.length / 3; i < l; i ++, j += 3 ) {
+
+      positions[ j     ] = ( i % size ) / size;
+      positions[ j + 1 ] = Math.floor( i / size ) / size;
+    
+    }
+
+    var posA = new THREE.BufferAttribute( positions , 3 );
+    geo.addAttribute( 'position', posA );
+
+
+    return geo;
+    
+  }
+
+
+</script>
+
+</body>
+</html>
