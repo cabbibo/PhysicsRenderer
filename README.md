@@ -1,6 +1,6 @@
 # PhysicsRenderer 
-Check it out on  [Github] !!!!!
-Contact me via [TWITTER]!!!!!
+- Check it out on  [Github] !!!!!
+- Contact me via [TWITTER]!!!!!
 
 ### Introduction
 
