@@ -114,17 +114,13 @@
   function createLookupGeometry( size ){        
         
     var geo = new THREE.BufferGeometry();
-
-   // geo.addAttribute( 'position', Float32Array , size * size , 3 );
-  
     var positions = new Float32Array(  size * size * 3 );
 
     for ( var i = 0, j = 0, l = positions.length / 3; i < l; i ++, j += 3 ) {
 
       positions[ j     ] = ( i % size ) / size;
       positions[ j + 1 ] = Math.floor( i / size ) / size;
-      //positions[ j + 2 ] = Math.sin( (i / size) * Math.PI );
-
+    
     }
 
     var posA = new THREE.BufferAttribute( positions , 3 );

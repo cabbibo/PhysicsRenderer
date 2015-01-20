@@ -300,12 +300,8 @@ PhysicsRenderer.prototype.resetRand = function( size , alpha ){
   texture.magFilter = THREE.NearestFilter,
 
   texture.needsUpdate = true;
-  
-  this.texturePassProgram.uniforms.texture.value = texture;
-  
-  this.pass( this.texturePassProgram , this.rt_1 );
-  this.pass( this.texturePassProgram , this.rt_2 );
-  this.pass( this.texturePassProgram , this.rt_3 );
+ 
+  this.reset( texture);
 
 }
 

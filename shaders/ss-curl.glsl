@@ -19,8 +19,8 @@ float rand(vec2 co){
 void main(){
 
   vec2 uv = gl_FragCoord.xy / resolution;
-  vec4 oPos = texture2D( t_oPos , vUv );
-  vec4 pos  = texture2D( t_pos , vUv );
+  vec4 oPos = texture2D( t_oPos , uv );
+  vec4 pos  = texture2D( t_pos , uv );
 
   vec3 vel = pos.xyz - oPos.xyz;
 
