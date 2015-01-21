@@ -1,0 +1,484 @@
+<html>
+<head>
+
+  <style>
+   @font-face {
+      font-family: "GeoSans";
+      src: url("assests/GeosansLight.ttf");
+    }
+    html{ color:#ffc; background:#000; font-family:"GeoSans" }
+    body{
+      font-size:30px;
+    }
+    a{
+      color: #fff;
+    }
+    a:hover{
+      color: #fff;
+      font-weight:bold;
+    }
+    a:visited{
+      color:#fff;
+    }
+    #README{
+      position:absolute;
+      z-index:999;
+      background:rgba( 0,0,0,.5);
+      margin: 100px;
+      padding: 20px;
+      width: 80%;
+      border: 1px solid white;
+    }
+    #renderer{
+      position:fixed;
+      top:0px;
+      left:0px;
+    }
+    code{
+      color:#fff;
+      font-size:20px;
+    }
+  </style>
+
+</head>
+<body style="margin:0px">
+
+<div id="README" style='-moz-user-select: none; -webkit-user-select: none; -ms-user-select:none; user-select:none;-o-user-select:none;' 
+ unselectable='on'
+ onselectstart='return false;' 
+ onmousedown='return false;'>
+ 
+ <h1 id="physicsrenderer">PhysicsRenderer</h1>
+<ul>
+<li>Check it out on  <a href="http://github.com/cabbibo/PhysicsRenderer/">Github</a> !!!!!</li>
+<li>Contact me via <a href="http://twitter.com/cabbibo">TWITTER</a>!!!!!</li>
+</ul>
+<h3 id="introduction">Introduction</h3>
+<p>An awesome lil helper to help you do gpgpu calculations! Inspired by a few awesome projects including:</p>
+<ul>
+<li><a href="http://mrdoob.com/#/153/sporel">Sporel</a> - An awesome demo by @mrdoob</li>
+<li><a href="http://soulwire.co.uk/experiments/webgl-gpu-particles/">ThreeJS GPGPU Examples</a> - A great example of flocking by @BlurSpline</li>
+<li><a href="http://soulwire.co.uk/experiments/webgl-gpu-particles/">Soulwire&#39;s GPGPU Particles</a> - Prettiness by the one and only @soulwire</li>
+</ul>
+<p>Using this tool ( or previous, uglier versions of it ) I&#39;ve made a whole smorgasbord of projects, including, but most definitely not limited to:</p>
+<ul>
+<li><a href="http://cabbi.bo/Needs/">Needs</a></li>
+<li><a href="http://cabbi.bo/flow">Flow</a></li>
+<li><a href="http://cabbi.bo/nvs/">NVS</a></li>
+<li><a href="http://wom.bs/audioSketches/weOver/">We Over</a></li>
+<li><a href="http://cabbi.bo/Bees/">Bees</a></li>
+<li><a href="http://cabbi.bo/DRAGONFISH/">DRAGONFISH</a></li>
+<li><a href="http://cabbi.bo/huldra/">Huldra</a></li>
+<li><a href="http://cabbi.bo/diamonds">Diamonds</a></li>
+</ul>
+<p>Because GPGPU Calculations are not something many developers are familiar with, I&#39;d like to talk a bit about them, including pros / cons , limitations, etc, but if you want to skip straight to the good stuff ( AKA Code ), feel free to dive into the following examples. This definitely is a subject that staring at code really helps with:</p>
+<ul>
+<li><a href="http://cabbi.bo/PhysicsRenderer/examples/curl.html">Curl Noise</a></li>
+<li><a href="http://cabbi.bo/PhysicsRenderer/examples/collisions.html">Collisions</a></li>
+<li><a href="http://cabbi.bo/PhysicsRenderer/examples/gravity.html">Gravity</a></li>
+<li><a href="http://cabbi.bo/PhysicsRenderer/examples/flocking.html">Flocking</a></li>
+</ul>
+<p>Also, at any point in time, jump straight over to the <a href="http://github.com/cabbibo/PhysicsRenderer/">Github</a> for the code! With all of this being said, lets start talking about how to use the Physics Renderer! If you want to know a bit more about how it actually works, check out the BACKGROUND section, but hopefully it is easy enough that you shouldn&#39;t <em>have</em> to know how crazy the gpgpu really gets!</p>
+<h3 id="caveats">Caveats</h3>
+<p>First things first, The PhysicsRenderer requires the use of Floating Point Textures. This is not something that is available ( <em>YET</em> ) in phones, so if you are trying to make a mobile friendly site, please run while you still can!</p>
+<p>Second, GPU performance varies dramatically from computer to computer, so make sure you have multiple machines, or multiple friends with multiple machines, to test on!</p>
+<p>Third, This specific renderer uses 2 positions textures to get a velocity, and interpolates based on that. Its much more efficient than having a seperate pass for position and velocity, but makes other parts more difficult, such as collisions. I have plans to add different types of render pases into this ( 3 old positions , pos / vel , etc ), but have not done so yet! If you have any good ideas of how to do this, let me know on <a href="http://twitter.com/cabbibo">TWITTER</a></p>
+<p>Fourth, for most of these examples, I will be using another Utility that I have written: <a href="http://cabbi.bo/ShaderLoader">ShaderLoader</a> , because its a cool tool, and I&#39;m too lazy to make things from scratch, but rest assured that ANY shader you write can still be used in this tool!</p>
+<h1 id="usage">Usage</h1>
+<h2 id="boring-setup-stuff-">Boring Setup Stuff:</h2>
+<h3 id="including-scripts">Including Scripts</h3>
+<p>As usual, the first thing you need to do is include the script</p>
+<pre><code class="lang-javascript">    &lt;script src=<span class="hljs-string">"PATH/TO/PhysicsRenderer.js"</span>&gt;<span class="xml"><span class="hljs-tag">&lt;/<span class="hljs-title">script</span>&gt;</span></span>
+</code></pre>
+<h3 id="initializing-the-physicsrenderer">Initializing the PhysicsRenderer</h3>
+<p>Within the &#39;Initialization&#39; phase of your application, create the renderer. To do this you will need 3 pieces of information:</p>
+<ul>
+<li>Size of Simulation ( actual size is this number squared )</li>
+<li>The Simulation Shader</li>
+<li>WebGL Renderer</li>
+</ul>
+<h5 id="size">Size</h5>
+<p>The size that will be passed into the PhysicsRenderer is not actually the number of particles, but rather the width / height of the texture to be used. This means that the actual number of positions in the simulation will be Size * Size . Also, for the sake of older GPUs  please try and keep this number a Power of 2 , AKA: 2 , 4 , 8 , 16 , 32 , 64 , 128 , 256 , 512 , 1024 ( that corresponds to 1048576 different position calculations BTW.... )</p>
+<h5 id="simulation-shader">Simulation Shader</h5>
+<p>This is the soul of the physics renderer. You can think of it as the &#39;Kernel&#39; that you are passing into to the GPU to be run. I will go into more depth about what this is later, but for now, just remember that is is a Fragment Shader passed in as a text string.</p>
+<h5 id="webgl-renderer">WebGL Renderer</h5>
+<p>This will just be the Three.js Renderer you use for everything else, so nothing fancy hear, just make sure you declare it before you create the PhysicsRenderer.</p>
+<p>Putting all these together the intialization looks a lil something like this:</p>
+<pre><code class="lang-javascript">    <span class="hljs-keyword">var</span> size = <span class="hljs-number">128</span>;
+    <span class="hljs-keyword">var</span> simulationShader = <span class="hljs-string">"SIMULATION FRAGMENT SHADER"</span>
+    renderer = <span class="hljs-keyword">new</span> THREE.WebGLRenderer();
+
+    physicsRenderer = <span class="hljs-keyword">new</span> PhysicsRenderer( size , simulationShader , renderer );
+</code></pre>
+<h3 id="updating-the-renderer">Updating the Renderer</h3>
+<p>Once its been initialized, all we have to do to use the renderer is update it in our animation loop, like so</p>
+<pre><code class="lang-javascript">    physicsRenderer.update();
+</code></pre>
+<p>If you do only these things, nothing is going to happen, and infact, you may get some errors, so lets dig a bit further and talk about what the simulation shader is going to look like:</p>
+<h2 id="simulation-shader-">Simulation Shader:</h2>
+<p>The simulation shader is the most important part of this tool, and everything else about the tool is just trying to get it to run. It will be written in GLSL, so we&#39;ll break it down by sections of the glsl program</p>
+<h3 id="uniforms">Uniforms</h3>
+<p>The first thing we will have to do is include the proper uniforms. In our case there are 3 that are mandatory: The Current Position Texture , The Old Positition Texture, and the resolution of simulation. Declaring them looks like so:</p>
+<pre><code class="lang-glsl"><span class="hljs-keyword">uniform</span> <span class="hljs-keyword">sampler2D</span> t_pos;  <span class="hljs-comment">// Current Position Texture</span>
+<span class="hljs-keyword">uniform</span> <span class="hljs-keyword">sampler2D</span> t_oPos; <span class="hljs-comment">// Old Position Texture</span>
+<span class="hljs-keyword">uniform</span> <span class="hljs-keyword">vec2</span> resolution;  <span class="hljs-comment">// Resolution of simulation</span>
+</code></pre>
+<p><em>ALWAYS PUT THESE IN YOUR PROGRAM!!!</em></p>
+<h3 id="main">Main</h3>
+<p>Within the &#39;main&#39; function, we use these uniforms to do our proper physics! To do this, we first need to get a &#39;UV&#39; position that will tell us where to look up in the texture to get our position, than we will use this uv to get our positions, got through the process of applying forces, and than at the very end, color the pixel accordingly </p>
+<h5 id="uv">UV</h5>
+<p>The resolution uniform is vital for this set , because it gives us exactly where in the texture our current position lies. We get this uv by doing the following:</p>
+<pre><code class="lang-glsl"><span class="hljs-keyword">vec2</span> uv = <span class="hljs-built_in">gl_FragCoord</span>.xy / resolution;
+</code></pre>
+<h5 id="positions">Positions</h5>
+<p>next we use our uv to look up the correct positions</p>
+<pre><code class="lang-glsl">  <span class="hljs-keyword">vec4</span> oPos = <span class="hljs-built_in">texture2D</span>( t_oPos , uv );
+  <span class="hljs-keyword">vec4</span> pos  = <span class="hljs-built_in">texture2D</span>( t_pos  , uv );
+</code></pre>
+<h5 id="velocity">Velocity</h5>
+<p>We can determine velocity from these two positions:</p>
+<pre><code class="lang-glsl"><span class="hljs-keyword">vec3</span> vel = pos.xyz - oPos.xyz;
+</code></pre>
+<h5 id="force">Force</h5>
+<p>This is the section of the program which can be all you! For now, I&#39;ll show you the most basic example: Fake Gravity.</p>
+<pre><code class="lang-glsl"><span class="hljs-keyword">vec3</span> force = <span class="hljs-keyword">vec3</span>( <span class="hljs-number">0.</span> , -<span class="hljs-number">1.</span> , <span class="hljs-number">0.</span> );
+</code></pre>
+<h5 id="getting-new-position">Getting New Position</h5>
+<p>Using position, velocity and force, we can than get a new position, like so:</p>
+<pre><code class="lang-glsl">vel += force;
+<span class="hljs-keyword">vec3</span> newPos = pos.xyz + vel;
+</code></pre>
+<h5 id="assigning-new-position">Assigning New Position</h5>
+<p>Now that we&#39;ve got a new position, all we have to do is assign it:</p>
+<pre><code class="lang-glsl"><span class="hljs-built_in">gl_FragColor</span> = <span class="hljs-keyword">vec4</span>( newPos , <span class="hljs-number">1.</span> );
+</code></pre>
+<h5 id="putting-it-all-together-">Putting it all together:</h5>
+<pre><code class="lang-glsl"><span class="hljs-keyword">uniform</span> <span class="hljs-keyword">sampler2D</span> t_pos; 
+<span class="hljs-keyword">uniform</span> <span class="hljs-keyword">sampler2D</span> t_oPos; 
+<span class="hljs-keyword">uniform</span> <span class="hljs-keyword">vec2</span> resolution; 
+
+<span class="hljs-keyword">void</span> main(){
+
+    <span class="hljs-keyword">vec2</span> uv = <span class="hljs-built_in">gl_FragCoord</span>.xy / resolution;
+
+    <span class="hljs-keyword">vec4</span> oPos = <span class="hljs-built_in">texture2D</span>( t_oPos , uv );
+    <span class="hljs-keyword">vec4</span> pos  = <span class="hljs-built_in">texture2D</span>( t_pos  , uv );
+
+    <span class="hljs-keyword">vec3</span> vel = pos.xyz - oPos.xyz;
+
+    <span class="hljs-keyword">vec3</span> force = <span class="hljs-keyword">vec3</span>( <span class="hljs-number">0.</span> , -<span class="hljs-number">1.</span> , <span class="hljs-number">0.</span> );
+
+    vel += force;
+    <span class="hljs-keyword">vec3</span> newPos = pos.xyz + vel;
+
+    <span class="hljs-built_in">gl_FragColor</span> = <span class="hljs-keyword">vec4</span>( newPos , <span class="hljs-number">1.</span> );
+
+}
+</code></pre>
+<h5 id="going-further">Going Further</h5>
+<p>The above is just about the MOST basic example possible, but theres so many other fun things you can do! Add dampenign to the velocity, make it so particles respawn somewhere else, etc. etc. etc. Check out the examples to see all the weird ways you can make points move!!!</p>
+<h2 id="using-the-output">Using the Output</h2>
+<p>Now that we&#39;ve discussed how to create the PhysicsRenderer, and pass in a simulation shader that will do a bunch of awesome calculations for us, We need to know how to use it. This will require a few things: Creating a geometry that knows how to use the output textures, creating a Material that knows how to use the output textures, and binding the output texture. </p>
+<h5 id="creating-a-geometry">Creating a Geometry</h5>
+<p>Just like in the simulation shader, where we created a uv by using the gl_FragCoord, we will make a geometry where the position corresponds to a position in a texture, rather than an actual position in 3D Space. We do this like so:</p>
+<pre><code class="lang-javascript"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">createLookupGeometry</span><span class="hljs-params">( size )</span></span>{        
+
+    <span class="hljs-keyword">var</span> geo = <span class="hljs-keyword">new</span> THREE.BufferGeometry();
+    <span class="hljs-keyword">var</span> positions = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Float32Array</span>(  size * size * <span class="hljs-number">3</span> );
+
+    <span class="hljs-keyword">for</span> ( <span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>, j = <span class="hljs-number">0</span>, l = positions.length / <span class="hljs-number">3</span>; i &lt; l; i ++, j += <span class="hljs-number">3</span> ) {
+
+        positions[ j     ] = ( i % size ) / size;
+        positions[ j + <span class="hljs-number">1</span> ] = <span class="hljs-built_in">Math</span>.floor( i / size ) / size;
+
+    }
+
+    <span class="hljs-keyword">var</span> posA = <span class="hljs-keyword">new</span> THREE.BufferAttribute( positions , <span class="hljs-number">3</span> );
+    geo.addAttribute( <span class="hljs-string">'position'</span>, posA );
+
+    <span class="hljs-keyword">return</span> geo;
+
+}
+</code></pre>
+<p>Right now, this is wasting the z data of the position, but consider that another constraint to play with!</p>
+<h5 id="creating-a-material">Creating a Material</h5>
+<p>Next We have to create a material that can use all of our data and create something meaningful on the screen. For right now, I will create the simplest possible material, but rest assured that some <a href="http://cabbi.bo/beacon">REALLY WEIRD MATERIALS</a> can be made... </p>
+<p>Lets break the material down into its seperate parts: The Uniforms, The Vertex Shader, and The Fragment Shader</p>
+<h6 id="uniforms">Uniforms</h6>
+<p>The Uniforms will be like any other set of shader uniforms, with One mandatory addition, the positions texture that will come from the simulation shader. Because of this, the most basic uniforms will look like this:</p>
+<pre><code class="lang-javascript"><span class="hljs-keyword">var</span> uniforms =  { 
+    t_pos: { type:<span class="hljs-string">"t"</span> , value: <span class="hljs-literal">null</span> }
+}
+</code></pre>
+<h6 id="vertex-shader">Vertex Shader</h6>
+<p>The vertex shader will do nothing but use the position of the geometry to look up into the positions texture, and than place the particle based on this information:</p>
+<pre><code class="lang-glsl"><span class="hljs-keyword">uniform</span> <span class="hljs-keyword">sampler2D</span> t_pos;
+
+<span class="hljs-keyword">void</span> main(){
+
+  <span class="hljs-keyword">vec4</span> pos = <span class="hljs-built_in">texture2D</span>( t_pos , position.xy );
+  <span class="hljs-built_in">gl_Position</span> = projectionMatrix * modelViewMatrix * <span class="hljs-keyword">vec4</span>( pos.xyz , <span class="hljs-number">1.</span> );
+
+}
+</code></pre>
+<h6 id="fragment-shader">Fragment Shader</h6>
+<p>The fragment shader than will look like any other fragment shader. All of the magic has already been done in the vertex shader:</p>
+<pre><code class="lang-glsl"><span class="hljs-keyword">void</span> main(){
+  <span class="hljs-built_in">gl_FragColor</span> = <span class="hljs-keyword">vec4</span>( <span class="hljs-number">1.</span> );
+}
+</code></pre>
+<h5 id="bringing-it-into-three">Bringing it into THREE</h5>
+<p>We than bring all of this information into THREE by doing the following:</p>
+<pre><code class="lang-javascript">
+<span class="hljs-keyword">var</span> geometry = createLookupGeometry( size );
+<span class="hljs-keyword">var</span> material = <span class="hljs-keyword">new</span> THREE.ShaderMaterial({
+    uniforms:uniforms,
+    vertexShader:vertexShader,
+    fragmentShader:fragmentShader
+});
+
+<span class="hljs-keyword">var</span> particles = <span class="hljs-keyword">new</span> THREE.PointCloud( geometry, material );
+particles.frustumCulled = <span class="hljs-literal">false</span>;
+
+scene.add( particles );
+</code></pre>
+<p>Notice the line:</p>
+<pre><code class="lang-javscript">particles.frustumCulled = false;
+</code></pre>
+<p>This is because all the particles will ahve positions that are not their true positions, so three.js may cull them, even though they should still be visible</p>
+<h5 id="binding-the-texture">Binding the texture</h5>
+<p>The last thing we need to do is bind the output of the PhysicsRenderer, so that it is used by our particle system. Luckily this is only a single line, and the PhysicsRenderer takes care of the rest:</p>
+<pre><code class="lang-javascript">physicsRenderer.addBoundTexture( uniforms.t_pos , <span class="hljs-string">'output'</span> );
+</code></pre>
+<p>doing this will make sure that whenever physicsRenderer.update is called, it will make sure that its output is assigned to the value of the uniform that is passed in!</p>
+<h2 id="other-helpful-functions">Other Helpful Functions</h2>
+<p>Although the above is all you need to get rolling, there are some very helpful functions to give you additional functionality</p>
+<h4 id="assigning-uniforms">Assigning Uniforms</h4>
+<p>Digging all the way into the Physics Renderer to set a uniform is pretty annoying,  so here are some other ways to set uniforms</p>
+<h6 id="setting-a-single-uniform">Setting a single uniform</h6>
+<p>Set a single uniform with whatever name you want!</p>
+<pre><code class="lang-javascript"><span class="hljs-keyword">var</span> uniforms ={
+    time:{ type:<span class="hljs-string">"f"</span> , value:<span class="hljs-number">0</span> },
+    dT:{ type:<span class="hljs-string">"f"</span> , value:<span class="hljs-number">0</span> },
+}
+
+physicsRenderer.setUniform( <span class="hljs-string">'nameInSimulationShader'</span> , uniforms.dT );
+</code></pre>
+<h6 id="setting-multiple-uniforms">Setting Multiple Uniforms</h6>
+<p>Set all uniforms from another set of unifoms</p>
+<pre><code class="lang-javascript"><span class="hljs-keyword">var</span> uniforms ={
+    time:{ type:<span class="hljs-string">"f"</span> , value:<span class="hljs-number">0</span> },
+    dT:{ type:<span class="hljs-string">"f"</span> , value:<span class="hljs-number">0</span> },
+}
+
+physicsRenderer.setUniforms( uniforms );
+</code></pre>
+<p>Keep in mind, that because the PhysicsRenderer always needs t_pos , t_oPos , and resolution, even if you try to set these via this method, the PhysicsRenderer will override them!</p>
+<h4 id="reseting-positions">Reseting Positions</h4>
+<p>You may want to place the particles at a certain place to start, because they will currently start all at [0,0,0]. This makes pretty much every simulation kindof boring, because you will only see 1 point... Because of this there are multiply ways to set positions:</p>
+<h6 id="reseting-position-randomly">Reseting position randomly</h6>
+<p>The easiest way to get a quick feel for a simulation is to reset the positions randomly. This is done with a 1-liner</p>
+<pre><code class="lang-javascript"><span class="hljs-comment">// Resets positions in a random box of side length 5</span>
+physicsRenderer.resetRand( <span class="hljs-number">5</span> );
+</code></pre>
+<h6 id="reseting-positions-with-another-texture">Reseting Positions with another texture</h6>
+<p>You can also create a specific texture with position information and reset it this way. Altough the creation of the texture might be a bit more than one line, the call to reset using a texture is only:</p>
+<pre><code class="lang-javascript"><span class="hljs-keyword">var</span> texture = createPositionTexture(size);
+physicsRenderer.reset( texture );
+</code></pre>
+<p>Just for the sake of completeness, here&#39;s a sample &#39;createPositionTexture&#39; function:</p>
+<pre><code class="lang-javascript"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">createPositionTexture</span><span class="hljs-params">(size)</span></span>{
+
+  <span class="hljs-keyword">var</span> data = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Float32Array</span>( size * size * <span class="hljs-number">4</span> );
+
+  <span class="hljs-keyword">for</span>( <span class="hljs-keyword">var</span> i =<span class="hljs-number">0</span>; i &lt; data.length; i++ ){
+
+    <span class="hljs-comment">//makes some weird sin based positions</span>
+    data[ i ] = <span class="hljs-built_in">Math</span>.sin( i*<span class="hljs-number">.1</span> ) * <span class="hljs-number">30</span>;
+
+  }
+
+  <span class="hljs-keyword">var</span> texture = <span class="hljs-keyword">new</span> THREE.DataTexture( 
+    data,
+    <span class="hljs-keyword">this</span>.size,
+    <span class="hljs-keyword">this</span>.size,
+    THREE.RGBAFormat,
+    THREE.FloatType
+  );
+
+  texture.minFilter =  THREE.NearestFilter,
+  texture.magFilter = THREE.NearestFilter,
+
+  texture.needsUpdate = <span class="hljs-literal">true</span>;
+
+  <span class="hljs-keyword">return</span> texture;
+
+
+}
+</code></pre>
+<h4 id="adding-a-debugscene">Adding a debugScene</h4>
+<p>Sometimes things might not be going right, and you want to see the actual data textures, or things are going right, and you want to see the data textures. They can look <a href="https://twitter.com/Cabbibo/status/554516882854645761/photo/1">REALLY COOL</a>. To do this, just call:</p>
+<pre><code class="lang-javascript">physicsRenderer.addDebugScene( scene );
+</code></pre>
+<p>You can change the scale of this scene ( and probably will have to  ), my playing with the THREE.Object3D which is physicsRenderer.debugScene. like so:</p>
+<pre><code class="lang-javascript">physicsRenderer.debugScene.scale.multiplyScalar( <span class="hljs-number">.1</span> );
+</code></pre>
+<h2 id="you-made-it-down-here-">YOU MADE IT DOWN HERE!</h2>
+<p>Thats alot of reading you&#39;ve just done. Why don&#39;t you go play with some examples now, or let me know on <a href="http://twitter.com/cabbibo">TWITTER</a> why everything I&#39;ve said is wrong! If you want to keep learnign about the GPU, keep reading on for a bit of background!</p>
+<h1 id="background">Background</h1>
+<h3 id="what-are-gpgpu-calculations-">What are GPGPU Calculations ?!??!</h3>
+<p>The first thing you need to understand about the physics renderer is how it actually works! Well you don&#39;t actually, but its reallly reallly cool, so stay with me!</p>
+<p>Your screen has alot of pixels right? And for a graphics programs, each one of these pixels needs to be told what color it should be. That is a WHOLE bunch of pixels. More than 5 million on my computer, and maybe even more on yours!</p>
+<p>Your GPU is in charge of doing all the calculations that tell you what color to make these pixels, and it is EXTREMELY good at doing so. It does this a bunch of different threads, and doing all the calculations in parrallel. This is a dramatic simplification. If you really want to nerd out, check out this article on <a href="ftp://download.nvidia.com/developer/GPU_Gems_2/GPU_Gems2_ch30.pdf">GPU Architecture</a>.</p>
+<p>Now, although things like <a href="https://www.khronos.org/webcl/">WebCL</a> are coming to the browser at some point in time, and there is actually a <a href="http://webcl.nokiaresearch.com/">WebCL Extension for Firefox</a>, General Purpose ( meaning anything not vertex / fragment shader based ) calculations done on the GPU can be a bit of a beast to work with. But WHY ?!?!?</p>
+<h3 id="tricking-your-computer">Tricking Your Computer</h3>
+<p>To do GPGPU ( General Purpose GPU ) calculations in WebGl, we have to use only the tools given to us. In the case of WebGL, thats vertex and fragment shaders. However, the output of these is a vec4 that represents a color. In WebGL, the GPU reallly likes doing colors, but everything else is a bit of a stretch. </p>
+<p>All this means though, is that we let the computer do colors, but use them for different purposes! By simply pretending that Red, Green and Blue values are actually X , Y and Z values, we get to tell the computer we are coloring pixels, when we are actually doing physics!!! ( insert evil laughter here!!! )</p>
+</div>
+
+<script src="lib/three.js"></script>
+<script src="lib/jquery.min.js"></script>
+<script src="lib/underscore.js"></script>
+<script src="lib/TrackballControls.js"></script>
+<script src="lib/ShaderLoader.js"></script>
+
+<script src="PhysicsRenderer.js"></script>
+
+
+<script>
+
+
+  var scene , camera , renderer, clock , controls;
+
+  var SIZE = 128;
+  var simulation;
+
+  var simulationUniforms = {
+  
+    dT:{ type:"f" , value: 0 },
+    noiseSize: { type:"f" , value: .1 }
+
+  }
+
+  var renderUniforms = {
+
+    t_pos:{ type:"t" , value: null }
+
+  }
+
+
+
+
+  var shaders = new ShaderLoader( 'shaders' );
+
+  shaders.load( 'ss-curlFront'    , 'sim'    , 'simulation' );
+  shaders.load( 'vs-lookupFront'  , 'lookup' , 'vertex'     );
+  shaders.load( 'fs-lookupFront'  , 'lookup' , 'fragment'   );
+
+  shaders.shaderSetLoaded = function(){
+
+    init();
+    animate();
+
+  }
+
+
+  
+  function init(){
+
+      /*
+
+         Default threejs stuff!
+
+      */
+      scene = new THREE.Scene();
+
+      var ar = window.innerWidth / window.innerHeight;
+
+      camera = new THREE.PerspectiveCamera( 75, ar , 1, 1000 );
+      camera.position.z = 5;
+
+      renderer = new THREE.WebGLRenderer();
+      renderer.setSize( window.innerWidth, window.innerHeight );
+
+      renderer.domElement.id = "renderer"
+      document.body.appendChild( renderer.domElement );
+
+
+     // controls = new THREE.TrackballControls( camera );
+      clock = new THREE.Clock();
+
+
+      simulation = new PhysicsRenderer( SIZE , shaders.ss.sim , renderer );
+
+
+      var geo = createLookupGeometry( SIZE );
+
+      var mat = new THREE.ShaderMaterial({
+        uniforms: renderUniforms,
+        vertexShader: shaders.vs.lookup,
+        fragmentShader: shaders.fs.lookup,
+
+      });
+
+      simulation.setUniforms( simulationUniforms );
+
+      var particles = new THREE.PointCloud( geo , mat );
+
+      scene.add( particles );
+
+
+      simulation.addBoundTexture( renderUniforms.t_pos , 'output' );
+      simulation.resetRand( 5 );
+
+      
+      var mousewheel = function( e ){
+
+        particles.rotation.x += e.wheelDeltaY / 1000;
+      
+      }
+    
+      window.addEventListener( 'mousewheel', mousewheel, false );
+
+  }
+
+  function animate(){
+
+    requestAnimationFrame( animate );
+ 
+    simulationUniforms.dT.value = clock.getDelta();
+    simulation.update();
+
+    //controls.update();
+    
+    renderer.render( scene , camera );
+
+  }
+
+
+  function createLookupGeometry( size ){        
+        
+    var geo = new THREE.BufferGeometry();
+    var positions = new Float32Array(  size * size * 3 );
+
+    for ( var i = 0, j = 0, l = positions.length / 3; i < l; i ++, j += 3 ) {
+
+      positions[ j     ] = ( i % size ) / size;
+      positions[ j + 1 ] = Math.floor( i / size ) / size;
+    
+    }
+
+    var posA = new THREE.BufferAttribute( positions , 3 );
+    geo.addAttribute( 'position', posA );
+
+    return geo;
+    
+  }
+
+</script>
+ 
+
+
+
+</body>
+<html>

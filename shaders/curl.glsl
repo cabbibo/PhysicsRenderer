@@ -1,3 +1,5 @@
+// Using  @eddietree implementation from 
+// His brilliant demo 'Artifacts'
 
 vec3 snoiseVec3( vec3 x ){
 

@@ -27,7 +27,6 @@ Because GPGPU Calculations are not something many developers are familiar with, 
 - [Collisions]
 - [Gravity]
 - [Flocking]
-- [Springs]
 
 Also, at any point in time, jump straight over to the [Github] for the code! With all of this being said, lets start talking about how to use the Physics Renderer! If you want to know a bit more about how it actually works, check out the BACKGROUND section, but hopefully it is easy enough that you shouldn't *have* to know how crazy the gpgpu really gets!
 
