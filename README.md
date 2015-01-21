@@ -390,7 +390,7 @@ All this means though, is that we let the computer do colors, but use them for d
 [Github]:http://github.com/cabbibo/PhysicsRenderer/
 
 [Sporel]:http://mrdoob.com/#/153/sporel
-[ThreeJS GPGPU Examples]: http://soulwire.co.uk/experiments/webgl-gpu-particles/
+[ThreeJS GPGPU Examples]: threejs.org/examples/#webgl_gpgpu_birds
 [Soulwire's GPGPU Particles]: http://soulwire.co.uk/experiments/webgl-gpu-particles/
 
 [Flow]:http://cabbi.bo/flow
