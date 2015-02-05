@@ -96,6 +96,7 @@
       simulation.setUniforms( simulationUniforms );
 
       var particles = new THREE.PointCloud( geo , mat );
+      particles.frustumCulled = false;
 
       scene.add( particles );
 
